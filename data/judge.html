@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="text/javascript">
+        /** @type {{total: number, judgedList: Array<{index: number, uid: string, sid: number, quetion_type: string, task_type: string, answer: string, model_response:string, is_result_correct: number, is_process_correct: number}>}} */
+        const progress = {
+            judgedList: [],
+        }
+
+        /** @type {Array<{description: string, graph_type: string, DG: string, uid: string, sid: number, question: string, answer: string, question_type: string, task_type: string, model_response: string}>} */
+        let problemList = []
+        
+        /** @type {number} */
+        let currentProblem = 0
+
+
+        /**
+            @param {string} raw
+        */
+        function parseQuestionListJson(raw) {
+            console.log("parseQuetionList")
+            problemList = raw.trim().split('\n').map(item => JSON.parse(item))
+            updateProblemView();
+            progress.judgedList = problemList.map((problem, idx) => {
+                return {
+                    index: idx,
+                    uid: problem.uid,
+                    sid: problem.sid,
+                    question_type: problem.question_type,
+                    task_type: problem.task_type,
+                    answer: problem.answer,
+                    model_response: problem.model_response,
+                    is_result_correct: -1,
+                    is_process_correct: -1
+                }
+            })
+        }
+
+        function loadJson(fileBlob, callbackFn) {
+            console.log("loadJson")
+            const fileReader = new FileReader()
+            fileReader.onload = (ev) => {
+                callbackFn(ev.target.result)
+            }
+            fileReader.readAsText(fileBlob, "UTF-8")
+        }
+
+        /**
+            @param {string} fileName
+        */
+        async function loadProgress() {
+            const [fileHandle] = await window.showOpenFilePicker()
+
+            // get file contents
+            const fileData = await fileHandle.getFile()
+
+            const loadCallback = (content) => {
+                const progressJson = JSON.parse(content)
+                progress.judgedList = progressJson.judgedList.sort((a, b) => a.index - b.index)
+                currentProblem = progress.judgedList.findIndex(progressItem => progressItem.is_result_correct < 0 || progressItem.is_process_correct < 0)
+                updateProblemView()
+            }
+
+            loadJson(fileData, loadCallback)
+        }
+
+        function onFileSelected() {
+            loadJson(document.getElementById("myfile").files[0], parseQuestionListJson)
+        }
+        
+        async function saveToFile() {
+            const fileHandle = await window.showSaveFilePicker();
+            const writableStream = await fileHandle.createWritable();
+            progress.judgedList.sort((a, b) => a.index - b.index)
+            await writableStream.write(JSON.stringify(progress));
+            await writableStream.close();
+        }
+
+        function updateProblemView() {
+            // Problem text
+            document.getElementById("desc_title").innerHTML = `(${currentProblem + 1}/${problemList.length}) Description: `
+            document.getElementById("problem_desc").innerHTML = `${problemList[currentProblem].description}<br />${problemList[currentProblem].question}`
+            document.getElementById("problem_img").src = `.\\images\\${problemList[currentProblem].task_type}\\${problemList[currentProblem].uid}.png`
+            document.getElementById("problem_ans").innerHTML = problemList[currentProblem].answer
+            document.getElementById("problem_resp").innerHTML = problemList[currentProblem].model_response.replaceAll("\n", "<br />")
+            
+            // Tag display
+            if (progress.judgedList.length == 0 || progress.judgedList[currentProblem].is_result_correct < 0) {
+                document.getElementById("problem_correctness_tag").innerHTML = ""
+                document.getElementById("problem_correctness_tag").style.backgroundColor = ""
+            } else if (progress.judgedList[currentProblem].is_result_correct == 0) {
+                document.getElementById("problem_correctness_tag").innerHTML = "Wrong"
+                document.getElementById("problem_correctness_tag").style.backgroundColor = "#f50"
+            } else if (progress.judgedList[currentProblem].is_result_correct == 1) {
+                document.getElementById("problem_correctness_tag").innerHTML = "Correct"
+                document.getElementById("problem_correctness_tag").style.backgroundColor = "#87d068"
+            } else if (progress.judgedList[currentProblem].is_result_correct == 2) {
+                document.getElementById("problem_correctness_tag").innerHTML = "Unknown"
+                document.getElementById("problem_correctness_tag").style.backgroundColor = "gray"
+            }
+
+            if (progress.judgedList.length == 0 || progress.judgedList[currentProblem].is_process_correct < 0) {
+                document.getElementById("process_correctness_tag").innerHTML = ""
+                document.getElementById("process_correctness_tag").style.backgroundColor = ""
+            } else if (progress.judgedList[currentProblem].is_process_correct == 0) {
+                document.getElementById("process_correctness_tag").innerHTML = "Wrong"
+                document.getElementById("process_correctness_tag").style.backgroundColor = "#f50"
+            } else if (progress.judgedList[currentProblem].is_process_correct == 1) {
+                document.getElementById("process_correctness_tag").innerHTML = "Correct"
+                document.getElementById("process_correctness_tag").style.backgroundColor = "#87d068"
+            } else if (progress.judgedList[currentProblem].is_process_correct == 2) {
+                document.getElementById("process_correctness_tag").innerHTML = "Unknown"
+                document.getElementById("process_correctness_tag").style.backgroundColor = "gray"
+            }
+
+            // Button display
+            document.getElementById("next_button").disabled = currentProblem == 0
+            document.getElementById("previous_button").disabled = currentProblem >= problemList.length - 1
+        }
+
+        function dispatchNextProblem() {
+            if (currentProblem < problemList.length - 1) {
+                currentProblem++
+            }
+            updateProblemView()
+        }
+
+        function dispatchPreviousProblem() {
+            if (currentProblem > 0) {
+                currentProblem--;
+            }
+            updateProblemView()
+        }
+
+        function dispatchResultMark(flag) {
+            progress.judgedList[currentProblem].is_result_correct = flag
+            updateProblemView()
+        }
+
+        function dispatchProcessMark(flag) {
+            progress.judgedList[currentProblem].is_process_correct = flag
+            updateProblemView()
+        }
+
+        document.onkeydown = e => {
+            if (e.key == "ArrowLeft") {
+                dispatchPreviousProblem()
+            } else if (e.key == "ArrowRight") {
+                dispatchNextProblem()
+            } else if (e.key == "1") {
+                dispatchResultMark(1)
+            } else if (e.key == "2") {
+                dispatchResultMark(0)
+            } else if (e.key == "3") {
+                dispatchResultMark(2)
+            }
+        }
+    </script>
+    <style>
+        .title {
+            font-weight: bold;
+        }
+        .mark_button {
+            margin: 0px 8px;
+            height: 40px;
+            width: 160px;
+            color: #ffffff;
+            font-size: 16px;
+            border-radius: 40px;
+            border-color: #ffffff;
+        }
+        .toggle_button {
+            margin: 0px 8px;
+            height: 40px;
+            width: 160px;
+            font-size: 16px;
+            border-radius: 40px;
+        }
+        .correct_button {
+            background-color: #87d068;      
+        }
+        .wrong_button {
+            background-color: #f50;
+        }
+        .unknown_button {
+            background-color: gray;
+        }
+        .card {
+            background-color: #ffffff;
+            margin: 12px ;
+            padding: 12px;
+        }
+        .correctness_tag {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            height: 32px;
+            width: 96px;
+            margin: 4px 0px 0px 12px;
+        }
+        .head_area {
+            margin: 12px;
+        }
+    </style>
+    <title>causal graph judge tool</title>
+</head>
+<body style="background-color: #f0f0f0;">
+    <div class="head_area">    
+        <label for="myfile">Select a file:</label>
+        <input type="file" id="myfile" name="myfile" onchange="onFileSelected()">
+        <button onclick="loadProgress()">Load Progress</button>
+        <button onclick="saveToFile()">Save</button>
+    </div>
+
+    <div style=" display: flex;">
+        <div class="card" style="width: 50%;">
+            <div class="title" id="desc_title">Description: </div>
+            <br />
+            <div class="multiline" id="problem_desc"></div >
+            <img id="problem_img" src="" alt="NO IMAGE">
+        </div>
+
+        <div class="card" style="width: 50%;">
+            <div class="title">Answer: </div>
+            <br />
+            <div id="problem_ans"></div>
+        </div>
+    </div>
+
+    <div style="display: flex;">
+        <div class="card" style="width: 50%;">
+            <div class="title">Model Response: </div>
+            <br />
+            <div class="multiline" id="problem_resp"></div> 
+        </div>
+        <div style="background-color: #f0f0f0; width: 50%;" class="card">
+            <div class="title">Result: </div>
+            <div>
+                <button class="mark_button correct_button" onclick="dispatchResultMark(1)">Correct</button>
+                <button class="mark_button wrong_button" onclick="dispatchResultMark(0)">Wrong</button>
+                <button class="mark_button unknown_button" onclick="dispatchResultMark(2)">Unknown</button>
+            </div>
+            <div style="margin: 8px 0px 0px 0px ;">
+                <span class="title">Marked as: </span>
+                <div class="correctness_tag" id="problem_correctness_tag"></div>
+            </div>
+            <br />
+            <div class="title">Process: </div>
+            <div>
+                <button class="mark_button correct_button" onclick="dispatchProcessMark(1)">Correct</button>
+                <button class="mark_button wrong_button" onclick="dispatchProcessMark(0)">Wrong</button>
+                <button class="mark_button unknown_button" onclick="dispatchProcessMark(2)">Unknown</button>
+            </div>
+            <div style="margin: 8px 0px 0px 0px ;">
+                <span class="title">Marked as: </span>
+                <div class="correctness_tag" id="process_correctness_tag"></div>
+            </div>
+
+            <div style="margin: 20px 0px 0px 0px;">
+                <button class="toggle_button" id="next_button" onclick="dispatchPreviousProblem()">Previous</button>
+                <button class="toggle_button" id="previous_button" onclick="dispatchNextProblem()">Next</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,14 @@
+digraph {
+	graph [rankdir=LR]
+	I [height=.5 shape=plaintext width=.5]
+	Y [height=.5 shape=plaintext width=.5]
+	H [height=.5 shape=plaintext width=.5]
+	U [height=.5 shape=plaintext width=.5]
+	I -> H [color=blue]
+	H -> U [color=blue]
+	I -> Y [color=blue]
+	Y -> H [color=blue]
+	I -> U [color=blue]
+	I -> Y [color=red dir=both]
+	H -> U [color=red dir=both]
+}

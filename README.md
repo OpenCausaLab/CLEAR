@@ -1,5 +1,5 @@
 # CLEAR
-This is the official data and code of the paper: [CLEAR: Can Language Models Really Understand Causal Graphs?](https://arxiv.org/pdf/2405.00622)
+This is the official data and code of the paper: [CLEAR: Can Language Models Really Understand Causal Graphs?](https://arxiv.org/pdf/2406.16605)
 
 ## Dataset
 ### Structure
@@ -96,7 +96,14 @@ sh evaluate/sh_manual.sh
 # 🖇️ Citation
 Please cite our paper if you find this repository benefits your work.
 ```bibtex
-
+@misc{chen2024clear,
+      title={CLEAR: Can Language Models Really Understand Causal Graphs?}, 
+      author={Sirui Chen and Mengying Xu and Kun Wang and Xingyu Zeng and Rui Zhao and Shengjie Zhao and Chaochao Lu},
+      year={2024},
+      eprint={2406.16605},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL}
+}
 
 ```
 

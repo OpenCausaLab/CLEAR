@@ -1,0 +1,16 @@
+digraph {
+	graph [rankdir=LR]
+	G [height=.5 shape=plaintext width=.5]
+	P [height=.5 shape=plaintext width=.5]
+	Z [height=.5 shape=plaintext width=.5]
+	E [height=.5 shape=plaintext width=.5]
+	G -> E [color=blue]
+	G -> Z [color=blue]
+	G -> P [color=blue]
+	P -> Z [color=blue]
+	P -> E [color=blue]
+	Z -> E [color=blue]
+	Z -> E [color=red dir=both]
+	P -> Z [color=red dir=both]
+	G -> E [color=red dir=both]
+}

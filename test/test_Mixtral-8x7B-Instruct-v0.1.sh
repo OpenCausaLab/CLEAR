@@ -1,0 +1,2 @@
+# model_path: path to your model
+python test.py --model_path ../Mixtral-8x7B-Instruct-v0.1 --data_file ../data/json_single/path.json --output_file ../output/mixtral/mixtral_path.jsonl --prompt basic --criterion normal

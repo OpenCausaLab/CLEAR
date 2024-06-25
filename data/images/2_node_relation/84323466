@@ -1,0 +1,17 @@
+digraph {
+	graph [rankdir=LR]
+	P [height=.5 shape=plaintext width=.5]
+	Y [height=.5 shape=plaintext width=.5]
+	F [height=.5 shape=plaintext width=.5]
+	A [height=.5 shape=plaintext width=.5]
+	T [height=.5 shape=plaintext width=.5]
+	K [height=.5 shape=plaintext width=.5]
+	Y -> K [color=blue]
+	P -> A [color=blue]
+	Y -> T [color=blue]
+	F -> A [color=blue]
+	P -> T [color=blue]
+	T -> K [color=blue]
+	Y -> T [color=red dir=both]
+	P -> A [color=red dir=both]
+}

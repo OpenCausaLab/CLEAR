@@ -1,0 +1,2 @@
+# model_path: path to your model
+python test.py --model_path ../internlm2-math-20b --data_file ../data/json_single/path.json --output_file ../output/internlm2-math-20b/internlm2_math_20b_path.jsonl --prompt basic --criterion normal
